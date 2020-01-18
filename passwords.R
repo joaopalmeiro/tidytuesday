@@ -62,6 +62,7 @@ count.equal.last.distance(password.test, "distance", 10)
 # Levenshtein distance versus the top N passwords.
 
 # Style function.
+# Inspired by the BBC style (https://bbc.github.io/rcookbook/).
 clean.style <- function() {
   fonttitle <- "Roboto"
   fontsubtitle <- "Roboto Thin"
