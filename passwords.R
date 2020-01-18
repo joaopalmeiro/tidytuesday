@@ -82,11 +82,26 @@ clean.style <- function() {
 
 get.plot <- function(df, col.pass, col.distance, word, topn) {
   df.pre.plot <- levenshtein.distance(df, col.pass, word)
+  
   count <-
     count.equal.last.distance(df.pre.plot, col.distance, topn)
   
   df.to.plot <- df.pre.plot[1:topn,]
+  
   max.distance <- max(df.to.plot[[col.distance]])
+  min.distance <- min(df.to.plot[[col.distance]])
+  
+  title <-
+    bquote(
+      "Top" ~ bold(.(toString(topn))) ~ "of the longest Levenshtein distances between" ~
+        bold(.(word)) ~ "and common passwords."
+    )
+  
+  subtitle <-
+    bquote(
+      "There are more" ~ .(toString(count)) ~ "passwords with a Levenshtein distance equal to" ~
+        .(toString(min.distance)) ~ "."
+    )
   
   bar.plot <-
     ggplot(df.to.plot, aes_string(x = col.pass, y = col.distance)) +
@@ -105,16 +120,19 @@ get.plot <- function(df, col.pass, col.distance, word, topn) {
                size = 0.5,
                colour = "#2F2F2F") +
     labs(
-      title = "",
+      title = title,
       subtitle = "",
       x = "Password",
       y = "Levenshtein distance"
     )
   
+  if (count > 0) {
+    bar.plot <- bar.plot + labs(subtitle = subtitle)
+  }
+  
   return(bar.plot)
 }
 
-get.plot(passwordswork, "password", "distance", "password", 10)
+get.plot(passwordswork, "password", "distance", "p", 10)
 
-setwd("~/tidytuesday")
 ggsave("passwords.png")
