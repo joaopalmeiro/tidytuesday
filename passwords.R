@@ -1,5 +1,6 @@
 library(tidyverse)
 
+# Dataset.
 passwords <-
   read_csv(
     'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-14/passwords.csv'
@@ -10,7 +11,7 @@ passwords
 nrow(passwords)
 nrow(distinct(passwords))
 
-# Drop rows containing missing values
+# Drop rows containing missing values.
 narows <- unique(which(is.na(passwords), arr.ind = TRUE)[, 1])
 
 slice(passwords, narows)
@@ -20,7 +21,7 @@ passwordswork
 
 length(unique(passwordswork$password)) == nrow(passwordswork)
 
-# Levenshtein distance
+# Levenshtein distance.
 levenshtein.distance <- function(df, col, word) {
   distances <- mapply(adist,
                       df[[col]],
@@ -44,6 +45,7 @@ password.test <-
   levenshtein.distance(passwordswork, "password", "password")
 print(password.test, n = 10)
 
+# Number of passwords with the same Levenshtein distance as the last word in the top N.
 count.equal.last.distance <- function(df, col, topn) {
   colref <- df[[col]]
   distanceref <- colref[topn]
@@ -56,6 +58,10 @@ count.equal.last.distance <- function(df, col, topn) {
 
 count.equal.last.distance(password.test, "distance", 10)
 
+# Bar chart.
+# Levenshtein distance versus the top N passwords.
+
+# Style function.
 clean.style <- function() {
   fonttitle <- "Roboto"
   fontsubtitle <- "Roboto Thin"
@@ -80,6 +86,7 @@ clean.style <- function() {
   )
 }
 
+# Plotting function.
 get.plot <- function(df, col.pass, col.distance, word, topn) {
   df.pre.plot <- levenshtein.distance(df, col.pass, word)
   
@@ -133,6 +140,6 @@ get.plot <- function(df, col.pass, col.distance, word, topn) {
   return(bar.plot)
 }
 
-get.plot(passwordswork, "password", "distance", "p", 10)
+get.plot(passwordswork, "password", "distance", "password", 10)
 
 ggsave("passwords.png")
