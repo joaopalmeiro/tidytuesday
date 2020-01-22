@@ -1,4 +1,5 @@
 library(tidyverse)
+library(scales)
 
 # Dataset.
 spotify_songs <-
@@ -99,7 +100,8 @@ get_feat_instances <- function(df, artist_1, artist_2) {
         sep = ""
       )
     
-    feat <- artists %>% filter(grepl(feat_reg_expr, track_artist, ignore.case = TRUE))
+    feat <-
+      artists %>% filter(grepl(feat_reg_expr, track_artist, ignore.case = TRUE))
     
     if (nrow(feat) == 0) {
       stop(
@@ -140,8 +142,60 @@ feat_work <-
 feat_work_2 <-
   get_feat_instances(spotify_songs_work, "SWV", "Wu-Tang Clan")
 
+# Style function.
+# Inspired by the BBC style (https://bbc.github.io/rcookbook/).
+clean_style <- function() {
+  fonttitle <- "Roboto"
+  fontsubtitle <- "Roboto Thin"
+  
+  theme(
+    plot.title = element_text(family = fonttitle,
+                              color = "#2F2F2F"),
+    plot.subtitle = element_text(
+      family = fontsubtitle,
+      size = 8,
+      color = "#2F2F2F"
+    ),
+    axis.title = element_blank(),
+    axis.text = element_text(family = fonttitle,
+                             color = "#2F2F2F"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+  )
+}
+
 # Slope chart.
-ggplot(data = feat_work, aes(x = track_artist, y = danceability, group = group)) +
-  geom_line(aes(alpha = 1), size = 2) +
-  geom_point(aes(alpha = 1), size = 4) +
-  scale_x_discrete(position = "top")
+plot_triple_slope_chart <- function(df, x, y, group) {
+  if (sum(df[[y]] %% 1 == 0) > 0) {
+    label_format <- number_format(big.mark = ',')
+  } else {
+    label_format <- number_format(accuracy = 0.01, decimal.mark = '.')
+  }
+  
+  plot <-
+    ggplot(data = df, aes_string(x = x, y = y, group = group)) +
+    geom_line(size = 1) +
+    geom_point(size = 4) +
+    scale_x_discrete(position = "top") +
+    scale_y_continuous(breaks = seq(min(df[[y]]),
+                                    max(df[[y]]),
+                                    length.out = 3),
+                       labels = label_format) +
+    list(theme_minimal() + clean_style())
+  
+  return(plot)
+}
+
+plot_triple_slope_chart(feat_work, "track_artist", "danceability", "group")
+plot_triple_slope_chart(feat_work, "track_artist", "duration_ms", "group")
+
+# Small multiple.
+feat_work %>%
+  select(c('track_artist', 'group', track_features)) %>%
+  pivot_longer(cols = track_features) %>%
+  ggplot(aes(x = track_artist, y = value, group = group)) +
+  geom_line(size = 0.5) +
+  geom_point(size = 3) +
+  scale_x_discrete(position = "top") +
+  list(theme_minimal() + clean_style()) +
+  facet_wrap( ~ name, scale = "free_y")
