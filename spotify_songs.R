@@ -21,16 +21,16 @@ spotify_songs_work
 glimpse(spotify_songs_work)
 
 # Duplicated rows.
-spotify_songs_work[duplicated(spotify_songs_work$track_id),]
-spotify_songs_work[duplicated(spotify_songs_work$track_id),][1, 1]
+spotify_songs_work[duplicated(spotify_songs_work$track_id), ]
+spotify_songs_work[duplicated(spotify_songs_work$track_id), ][1, 1]
 
 # Same track, different playlists.
 check_track_id <-
-  spotify_songs_work[spotify_songs_work$track_id == "1HfMVBKM75vxSfsQ5VefZ5",]
+  spotify_songs_work[spotify_songs_work$track_id == "1HfMVBKM75vxSfsQ5VefZ5", ]
 
 # Drop duplicated rows.
 spotify_songs_work <-
-  spotify_songs_work[!duplicated(spotify_songs_work$track_id),]
+  spotify_songs_work[!duplicated(spotify_songs_work$track_id), ]
 glimpse(spotify_songs_work)
 
 # Check rows with more than one artist per track.
@@ -115,7 +115,13 @@ get_feat_instances <- function(df, artist_1, artist_2) {
       )
     }
     
-    sample_feat <- feat %>% group_by(track_artist) %>% sample_n(1)
+    sample_feat <-
+      feat %>%
+      group_by(track_artist) %>%
+      sample_n(1)
+    
+    sample_feat$track_artist <-
+      sub(feat_names, 'ft.', sample_feat$track_artist, ignore.case = TRUE)
     
     add_column(bind_rows(sample_artist_1, sample_feat, sample_artist_2),
                group = 1)
@@ -129,6 +135,8 @@ get_feat_instances <- function(df, artist_1, artist_2) {
 }
 
 get_feat_instances(spotify_songs_work, "Big Moe", "Z-Ro")
+get_feat_instances(spotify_songs_work, "Big Moe", "Z-Ro")$track_artist
+get_feat_instances(spotify_songs_work, "Big Moe", "Z-Ro")$danceability
 get_feat_instances(spotify_songs_work, "Big Moe", "Z-Ro")$group
 
 get_feat_instances(spotify_songs_work, "TPE", "Adam Marano")
@@ -139,8 +147,14 @@ get_feat_instances(spotify_songs_work, "SWV", "Wu-Tang Clan")
 
 feat_work <-
   get_feat_instances(spotify_songs_work, "Big Moe", "Z-Ro")
+feat_work
+feat_work$danceability
+feat_work$duration_ms
+
 feat_work_2 <-
   get_feat_instances(spotify_songs_work, "SWV", "Wu-Tang Clan")
+feat_work_2
+feat_work_2$danceability
 
 # Style function.
 # Inspired by the BBC style (https://bbc.github.io/rcookbook/).
@@ -165,6 +179,11 @@ clean_style <- function() {
 }
 
 # Slope chart.
+first_uppercase <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  return(x)
+}
+
 plot_triple_slope_chart <- function(df, x, y, group) {
   if (sum(df[[y]] %% 1 == 0) > 0) {
     label_format <- number_format(big.mark = ',')
@@ -172,24 +191,43 @@ plot_triple_slope_chart <- function(df, x, y, group) {
     label_format <- number_format(accuracy = 0.01, decimal.mark = '.')
   }
   
+  title <-
+    bquote(
+      "Difference in" ~ bold(.(y)) ~ "between the collaboration track and a random track by each of the artists."
+    )
+  
   plot <-
-    ggplot(data = df, aes_string(x = x, y = y, group = group)) +
-    geom_line(size = 1) +
-    geom_point(size = 4) +
+    df %>%
+    ggplot(aes_string(x = x, y = y, group = group)) +
+    geom_line(size = 1, colour = "#2F2F2F") +
+    geom_point(
+      data = df[2,],
+      colour = "#2F2F2F",
+      fill = "white",
+      size = 6,
+      shape = 21,
+      mapping = aes_string(x = x, y = y)
+    ) +
+    geom_point(size = 4, colour = "#2F2F2F") +
     scale_x_discrete(position = "top") +
     scale_y_continuous(breaks = seq(min(df[[y]]),
                                     max(df[[y]]),
                                     length.out = 3),
                        labels = label_format) +
-    list(theme_minimal() + clean_style())
+    list(theme_minimal() + clean_style()) +
+    labs(title = title, subtitle = "")
   
   return(plot)
 }
 
 plot_triple_slope_chart(feat_work, "track_artist", "danceability", "group")
+# ggsave("spotify_songs_1.png")
+
 plot_triple_slope_chart(feat_work, "track_artist", "duration_ms", "group")
 
-# Small multiple.
+plot_triple_slope_chart(feat_work_2, "track_artist", "danceability", "group")
+
+# TODO: Small multiple.
 feat_work %>%
   select(c('track_artist', 'group', track_features)) %>%
   pivot_longer(cols = track_features) %>%
@@ -198,4 +236,4 @@ feat_work %>%
   geom_point(size = 3) +
   scale_x_discrete(position = "top") +
   list(theme_minimal() + clean_style()) +
-  facet_wrap( ~ name, scale = "free_y")
+  facet_wrap(~ name, scale = "free_y")
