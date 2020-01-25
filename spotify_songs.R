@@ -126,13 +126,14 @@ get_feat_instances <- function(df, artist_1, artist_2) {
     sample_feat$track_artist <-
       sub(feat_names, 'ft.', sample_feat$track_artist, ignore.case = TRUE)
     
-    df_ready <- add_column(bind_rows(sample_artist_1, sample_feat, sample_artist_2),
-               group = 1)
+    df_ready <-
+      add_column(bind_rows(sample_artist_1, sample_feat, sample_artist_2),
+                 group = 1)
     
     # Convert ms to min.
-    df_ready$duration_ms <- df_ready$duration_ms / (60*1000)
+    df_ready$duration_ms <- df_ready$duration_ms / (60 * 1000)
     
-    df_ready %>% rename(duration_min = duration_ms) 
+    df_ready %>% rename(duration_min = duration_ms)
     
   },
   error = function(cond) {
@@ -231,7 +232,7 @@ plot_triple_slope_chart <- function(df, x, y, group) {
 }
 
 plot_triple_slope_chart(feat_work, "track_artist", "danceability", "group")
-# ggsave("spotify_songs_1.png")
+# ggsave("spotify_songs_slope_chart.png")
 
 plot_triple_slope_chart(feat_work, "track_artist", "duration_min", "group")
 plot_triple_slope_chart(feat_work, "track_artist", "instrumentalness", "group")
@@ -239,38 +240,102 @@ plot_triple_slope_chart(feat_work, "track_artist", "instrumentalness", "group")
 plot_triple_slope_chart(feat_work_2, "track_artist", "danceability", "group")
 
 # Small multiple.
-plot_multiple_slope_chart <- function(df, x, track_features, group) {
-  y_axis_breaks <- function(y) { seq(min(y), max(y), length.out = 3) }
+dark_clean_style <- function() {
+  fonttitle <- "Roboto"
+  fontsubtitle <- "Roboto Thin"
   
-  label_format <- function(l) {
-    scaled = case_when(l >= 1E3 ~ paste0(formatC(l/1E3, digits = 0, big.mark = ",", format = "f"), "K"),
-                       l %% 1 > 0 ~ paste0(formatC(l, format = "f", digits = 2, decimal.mark = '.')),
-                       TRUE ~ paste0(l))
-    return(scaled)
-  }
-  
-  plot <-
-    df %>%
-    select(c(x, group, track_features)) %>%
-    pivot_longer(cols = track_features) %>%
-    ggplot(aes_string(x = x, y = "value", group = group)) +
-    geom_line(size = 0.5) +
-    geom_point(size = 3) +
-    scale_x_discrete(position = "top") +
-    scale_y_continuous(breaks = y_axis_breaks, expand=expand_scale(0,0), labels = label_format) +
-    list(theme_minimal() + clean_style() + theme(panel.spacing = unit(2, "lines"))) +
-    facet_wrap(~ name, scale = "free_y") + 
-    coord_cartesian(clip = "off")
-  
-  return(plot)
+  theme(
+    plot.title = element_text(family = fonttitle,
+                              color = "white"),
+    plot.subtitle = element_text(
+      family = fontsubtitle,
+      size = 8,
+      color = "white"
+    ),
+    axis.title = element_blank(),
+    axis.text = element_text(family = fonttitle,
+                             color = "white"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    plot.background = element_rect(color = "#2F2F2F", fill = "#2F2F2F"),
+    strip.background = element_rect(fill=NA, color = NA),
+    panel.background = element_rect(fill = "#2F2F2F", color  =  NA),
+    strip.text = element_text(color = "white")
+  )
 }
 
-plot_multiple_slope_chart(feat_work, "track_artist", track_features, "group")
+plot_multiple_slope_chart <-
+  function(df,
+           x,
+           track_features,
+           group,
+           title_verbose = TRUE,
+           dark = FALSE) {
+    y_axis_breaks <- function(y) {
+      seq(min(y), max(y), length.out = 3)
+    }
+    
+    label_format <- function(l) {
+      scaled = case_when(l >= 1E3 ~ paste0(formatC(
+        l / 1E3,
+        digits = 0,
+        big.mark = ",",
+        format = "f"
+      ), "K"),
+      l %% 1 > 0 ~ paste0(formatC(
+        l,
+        format = "f",
+        digits = 2,
+        decimal.mark = '.'
+      )),
+      TRUE ~ paste0(l))
+      return(scaled)
+    }
+    
+    if (title_verbose) {
+      title <-
+        bquote(bold(.(df[[x]][1])) ~ "vs" ~ bold(.(df[[x]][2])) ~ "vs" ~ bold(.(df[[x]][3])))
+    } else {
+      title <-
+        bquote(.(df[[x]][1]) ~ bold(.("ft.")) ~ .(df[[x]][3]))
+    }
+    
+    if (dark) {
+      point_line_color <- "white"
+    } else {
+      point_line_color <- "#2F2F2F"
+    }
+    
+    plot <-
+      df %>%
+      select(c(x, group, track_features)) %>%
+      pivot_longer(cols = track_features) %>%
+      ggplot(aes_string(x = x, y = "value", group = group)) +
+      geom_line(size = 0.5, colour = point_line_color) +
+      geom_point(size = 3, colour = point_line_color) +
+      scale_x_discrete(position = "top", labels = NULL) +
+      scale_y_continuous(breaks = y_axis_breaks,
+                         expand = expand_scale(0, 0),
+                         labels = label_format) +
+      list(
+        theme_minimal() + dark_clean_style() + theme(
+          plot.margin = unit(c(1, 1, 1, 1), "lines"),
+          panel.spacing = unit(2, "lines"),
+          strip.text.x = element_text(margin = margin(0, 0, 10, 0))
+        )
+      ) +
+      facet_wrap(~ name, scale = "free_y") +
+      coord_cartesian(clip = "off") +
+      labs(title = title, subtitle = "A comparison between a collaborative track and a random track by each of the artists.")
+    
+    return(plot)
+  }
+
+plot_multiple_slope_chart(feat_work, "track_artist", track_features, "group", dark = TRUE)
+# ggsave("spotify_songs_small_multiple_slope_chart.png")
+
+plot_multiple_slope_chart(feat_work_2, "track_artist", track_features, "group")
 
 feat_work[track_features]
 feat_work$tempo
 feat_work$instrumentalness
-
-feat_work %>%
-  select(c("track_artist", "group", track_features)) %>%
-  pivot_longer(cols = track_features)
