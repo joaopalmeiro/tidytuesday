@@ -482,12 +482,13 @@ lamar_rihanna_df %>%
   select(c('track_artist', track_features)) %>%
   pivot_longer(cols = track_features) %>%
   ggplot(aes(x = value)) +
-  geom_density(aes(color = track_artist), alpha = 0.5, size = 0.5) +
+  geom_density(aes(color = track_artist), alpha = 0.5, size = 0.5, key_glyph = "smooth") +
   scale_color_manual(values = density_colors) +
   geom_vline(
     data = lamar_rihanna_feat,
-    mapping = aes(xintercept = mean_value),
-    color = "#CBCBCB"
+    aes(xintercept = mean_value, linetype = "Kendrick Lamar feat. Rihanna"),
+    color = "#CBCBCB",
+    key_glyph = "vline"
   ) +
   geom_hline(yintercept = 0,
              size = 0.5,
@@ -499,7 +500,9 @@ lamar_rihanna_df %>%
       theme(
         axis.text.y = element_blank(),
         panel.grid = element_blank(),
-        legend.position = "none"
+        legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(colour = "#2F2F2F")
       )
   ) +
   labs(title = "title_test", subtitle = "subtitle_test")
