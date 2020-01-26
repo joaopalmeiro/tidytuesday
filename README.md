@@ -10,7 +10,7 @@ This repository contains my contributions to the [#TidyTuesday](https://github.c
 
 ---
 
-[`2020-01-21`](https://github.com/rfordatascience/tidytuesday/tree/master/data/2020/2020-01-21) | **Spotify Songs** | [Code](2020-01-21/spotify_songs.R) | [Tweet]()
+[`2020-01-21`](https://github.com/rfordatascience/tidytuesday/tree/master/data/2020/2020-01-21) | **Spotify Songs** | [Code](2020-01-21/spotify_songs.R) | [Tweet](https://twitter.com/joaompalmeiro/status/1221547161395122191)
 
 ![Single Slope Chart](2020-01-21/spotify_songs_slope_chart.png)
 
