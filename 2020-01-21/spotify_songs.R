@@ -224,14 +224,14 @@ plot_triple_slope_chart <- function(df, x, y, group) {
                                     max(df[[y]]),
                                     length.out = 3),
                        labels = label_format) +
-    list(theme_minimal() + clean_style()) +
+    list(theme_minimal() + clean_style() + theme(plot.subtitle = element_text(margin = margin(0, 0, 10, 0)))) +
     labs(title = title, subtitle = "")
   
   return(plot)
 }
 
 plot_triple_slope_chart(feat_work, "track_artist", "danceability", "group")
-# ggsave("spotify_songs_slope_chart.png")
+ggsave("spotify_songs_slope_chart.png")
 
 plot_triple_slope_chart(feat_work, "track_artist", "duration_min", "group")
 plot_triple_slope_chart(feat_work, "track_artist", "instrumentalness", "group")
@@ -361,13 +361,13 @@ plot_multiple_slope_chart(
   dark = TRUE,
   night_sky = TRUE
 )
-# ggsave("spotify_songs_small_multiple_slope_chart_night_sky.png")
+ggsave("spotify_songs_small_multiple_slope_chart_night_sky.png")
 
 plot_multiple_slope_chart(feat_work,
                           "track_artist",
                           track_features,
                           "group")
-# ggsave("spotify_songs_small_multiple_slope_chart.png")
+ggsave("spotify_songs_small_multiple_slope_chart.png")
 
 # Collaborations (according to track_name).
 feat_names_track_name <- "(?:feat.|featuring|ft.|ft|feat)"
@@ -526,7 +526,8 @@ plot_densities <-
             legend.title = element_blank(),
             legend.text = element_text(colour = "#2F2F2F"),
             legend.margin = margin(c(0, 0, 0, 0)),
-            legend.box.spacing = unit(c(0, 0, 1, 0), "lines")
+            legend.box.spacing = unit(c(0, 0, 1, 0), "lines"),
+            panel.spacing.x = unit(2, "lines")
           )
       ) +
       labs(title = "Density estimation of audio features", subtitle = subtitle)
@@ -540,5 +541,4 @@ plot_densities(
   "feat_artist",
   track_features
 )
-
-# ggsave("spotify_songs_small_multiple_kde.png")
+ggsave("spotify_songs_small_multiple_kde.png")
