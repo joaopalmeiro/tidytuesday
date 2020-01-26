@@ -7,7 +7,6 @@ spotify_songs <-
     'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv'
   )
 spotify_songs
-
 glimpse(spotify_songs)
 
 names(spotify_songs)
@@ -20,20 +19,19 @@ track_features
 # Drop rows containing missing values.
 spotify_songs_work <- spotify_songs %>% drop_na()
 spotify_songs_work
-
 glimpse(spotify_songs_work)
 
 # Duplicated rows.
-spotify_songs_work[duplicated(spotify_songs_work$track_id),]
-spotify_songs_work[duplicated(spotify_songs_work$track_id),][1, 1]
+spotify_songs_work[duplicated(spotify_songs_work$track_id), ]
+spotify_songs_work[duplicated(spotify_songs_work$track_id), ][1, 1]
 
 # Same track, different playlists.
 check_track_id <-
-  spotify_songs_work[spotify_songs_work$track_id == "1HfMVBKM75vxSfsQ5VefZ5",]
+  spotify_songs_work[spotify_songs_work$track_id == "1HfMVBKM75vxSfsQ5VefZ5", ]
 
 # Drop duplicated rows.
 spotify_songs_work <-
-  spotify_songs_work[!duplicated(spotify_songs_work$track_id),]
+  spotify_songs_work[!duplicated(spotify_songs_work$track_id), ]
 glimpse(spotify_songs_work)
 
 # Check rows with more than one artist per track (according to track_artist).
@@ -213,7 +211,7 @@ plot_triple_slope_chart <- function(df, x, y, group) {
     ggplot(aes_string(x = x, y = y, group = group)) +
     geom_line(size = 1, colour = "#2F2F2F") +
     geom_point(
-      data = df[2, ],
+      data = df[2,],
       colour = "#2F2F2F",
       fill = "white",
       size = 6,
@@ -241,6 +239,7 @@ plot_triple_slope_chart(feat_work, "track_artist", "instrumentalness", "group")
 plot_triple_slope_chart(feat_work_2, "track_artist", "danceability", "group")
 
 # Small multiple.
+# Slope charts to compare a collaborative track and a random track by each of the artists.
 dark_clean_style <- function() {
   fonttitle <- "Roboto"
   fontsubtitle <- "Roboto Thin"
@@ -346,7 +345,7 @@ plot_multiple_slope_chart <-
           strip.text.x = element_text(margin = margin(0, 0, 10, 0))
         ) + small_multiple_theme
       ) +
-      facet_wrap(~ name, scale = "free_y") +
+      facet_wrap( ~ name, scale = "free_y") +
       coord_cartesian(clip = "off") +
       labs(title = title,
            subtitle = "A comparison between a collaborative track and a random track by each of the artists.")
@@ -362,13 +361,13 @@ plot_multiple_slope_chart(
   dark = TRUE,
   night_sky = TRUE
 )
-ggsave("spotify_songs_small_multiple_slope_chart_night_sky.png")
+# ggsave("spotify_songs_small_multiple_slope_chart_night_sky.png")
 
 plot_multiple_slope_chart(feat_work,
                           "track_artist",
                           track_features,
                           "group")
-ggsave("spotify_songs_small_multiple_slope_chart.png")
+# ggsave("spotify_songs_small_multiple_slope_chart.png")
 
 # Collaborations (according to track_name).
 feat_names_track_name <- "(?:feat.|featuring|ft.|ft|feat)"
@@ -466,45 +465,80 @@ lamar_rihanna_df %>%
   select(c('track_artist', track_features)) %>%
   pivot_longer(cols = track_features)
 
-density_colors <- c("#D1A06B", "#87817C")
-
-lamar_rihanna_feat <- lamar_rihanna_df %>%
-  filter(grepl(
-    paste("(", "Kendrick Lamar", "|", "Rihanna", ")", sep = ""),
-    get("feat_artist"),
-    ignore.case = TRUE
-  )) %>% select(c('track_artist', track_features)) %>%
-  pivot_longer(cols = track_features) %>%
-  group_by(name) %>%
-  summarise(mean_value = mean(value))
-
-lamar_rihanna_df %>%
-  select(c('track_artist', track_features)) %>%
-  pivot_longer(cols = track_features) %>%
-  ggplot(aes(x = value)) +
-  geom_density(aes(color = track_artist), alpha = 0.5, size = 0.5, key_glyph = "smooth") +
-  scale_color_manual(values = density_colors) +
-  geom_vline(
-    data = lamar_rihanna_feat,
-    aes(xintercept = mean_value, linetype = "Kendrick Lamar feat. Rihanna"),
-    color = "#CBCBCB",
-    key_glyph = "vline"
-  ) +
-  geom_hline(yintercept = 0,
-             size = 0.5,
-             colour = "#CBCBCB") +
-  facet_wrap( ~ name, ncol = 3, scales = 'free') +
-  list(
-    theme_minimal() +
-      clean_style() +
-      theme(
-        axis.text.y = element_blank(),
-        panel.grid = element_blank(),
-        legend.position = "top",
-        legend.title = element_blank(),
-        legend.text = element_text(colour = "#2F2F2F")
+# Small multiple.
+# Density estimation of audio features.
+# Comparison between the tracks of two artists and the mean of the tracks in which they collaborate.
+plot_densities <-
+  function(df,
+           artist_1,
+           artist_2,
+           artist_col,
+           feat_col,
+           track_features) {
+    density_colors <- c("#AA5353", "#72AFA4")
+    
+    feat_df <- df %>%
+      filter(grepl(
+        paste("(", artist_1, "|", artist_2, ")", sep = ""),
+        get(feat_col),
+        ignore.case = TRUE
+      )) %>% select(c(artist_col, track_features)) %>%
+      pivot_longer(cols = track_features) %>%
+      group_by(name) %>%
+      summarise(mean_value = mean(value))
+    
+    subtitle <-
+      bquote(
+        "A comparison between" ~ .(artist_1) * "," ~ .(artist_2) * ", and the mean of their collaborations."
       )
-  ) +
-  labs(title = "title_test", subtitle = "subtitle_test")
+    
+    df %>%
+      select(c(artist_col, track_features)) %>%
+      pivot_longer(cols = track_features) %>%
+      ggplot(aes(x = value)) +
+      geom_density(
+        aes_string(color = artist_col),
+        alpha = 0.5,
+        size = 0.5,
+        key_glyph = "timeseries"
+      ) +
+      scale_color_manual(values = density_colors) +
+      geom_vline(
+        data = feat_df,
+        aes(
+          xintercept = mean_value,
+          linetype = paste(artist_1, "feat.", artist_2, sep = " ")
+        ),
+        color = "#CBCBCB",
+        key_glyph = "vline"
+      ) +
+      geom_hline(yintercept = 0,
+                 size = 0.5,
+                 colour = "#CBCBCB") +
+      facet_wrap(~ name, ncol = 3, scales = 'free') +
+      list(
+        theme_minimal() +
+          clean_style() +
+          theme(
+            axis.text.y = element_blank(),
+            panel.grid = element_blank(),
+            legend.position = "top",
+            legend.title = element_blank(),
+            legend.text = element_text(colour = "#2F2F2F"),
+            legend.margin = margin(c(0, 0, 0, 0)),
+            legend.box.spacing = unit(c(0, 0, 1, 0), "lines")
+          )
+      ) +
+      labs(title = "Density estimation of audio features", subtitle = subtitle)
+  }
+
+plot_densities(
+  lamar_rihanna_df,
+  "Kendrick Lamar",
+  "Rihanna",
+  "track_artist",
+  "feat_artist",
+  track_features
+)
 
 # ggsave("spotify_songs_small_multiple_kde.png")
