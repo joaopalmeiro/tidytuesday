@@ -36,12 +36,12 @@ spotify_songs_work <-
   spotify_songs_work[!duplicated(spotify_songs_work$track_id),]
 glimpse(spotify_songs_work)
 
-# Check rows with more than one artist per track.
+# Check rows with more than one artist per track (according to track_artist).
 feat_names <- "(feat.|featuring|ft.)"
 
 feat <-
   spotify_songs_work %>% filter(grepl(
-    paste("\\s", feat_name, "\\s", sep = ""),
+    paste("\\s", feat_names, "\\s", sep = ""),
     track_artist,
     ignore.case = TRUE
   ))
@@ -49,7 +49,7 @@ glimpse(feat)
 
 spotify_songs_work %>% filter(grepl("Z-Ro", track_artist, ignore.case = TRUE))
 
-# Collaborations.
+# Collaborations (according to track_artist).
 get_feat_instances <- function(df, artist_1, artist_2) {
   out <- tryCatch({
     reg_expr <- paste("(", artist_1, "|", artist_2, ")", sep = "")
@@ -156,16 +156,16 @@ get_feat_instances(spotify_songs_work, "Big Moe", "Ronnetta Spencer")
 get_feat_instances(spotify_songs_work, "SWV", "Wu-Tang Clan")
 
 feat_work <-
-  get_feat_instances(spotify_songs_work, "Big Moe", "Z-Ro")
+  get_feat_instances(spotify_songs_work, "SWV", "Wu-Tang Clan")
 feat_work
 feat_work$danceability
-# feat_work$duration_ms
-feat_work$duration_min
 
 feat_work_2 <-
-  get_feat_instances(spotify_songs_work, "SWV", "Wu-Tang Clan")
+  get_feat_instances(spotify_songs_work, "Big Moe", "Z-Ro")
 feat_work_2
 feat_work_2$danceability
+feat_work_2$loudness
+feat_work_2$duration_min
 
 # Style function.
 # Inspired by the BBC style (https://bbc.github.io/rcookbook/).
@@ -179,7 +179,8 @@ clean_style <- function() {
     plot.subtitle = element_text(
       family = fontsubtitle,
       size = 8,
-      color = "#2F2F2F"
+      color = "#2F2F2F",
+      margin = margin(0, 0, 20, 0)
     ),
     axis.title = element_blank(),
     axis.text = element_text(family = fonttitle,
@@ -250,7 +251,8 @@ dark_clean_style <- function() {
     plot.subtitle = element_text(
       family = fontsubtitle,
       size = 8,
-      color = "white"
+      color = "white",
+      margin = margin(0, 0, 20, 0)
     ),
     axis.title = element_blank(),
     axis.text = element_text(family = fonttitle,
@@ -258,7 +260,7 @@ dark_clean_style <- function() {
     panel.grid.major.x = element_blank(),
     panel.grid.minor.y = element_blank(),
     plot.background = element_rect(color = "#2F2F2F", fill = "#2F2F2F"),
-    strip.background = element_rect(fill=NA, color = NA),
+    strip.background = element_rect(fill = NA, color = NA),
     panel.background = element_rect(fill = "#2F2F2F", color  =  NA),
     strip.text = element_text(color = "white")
   )
@@ -270,25 +272,28 @@ plot_multiple_slope_chart <-
            track_features,
            group,
            title_verbose = TRUE,
-           dark = FALSE) {
+           dark = FALSE,
+           night_sky = FALSE) {
     y_axis_breaks <- function(y) {
       seq(min(y), max(y), length.out = 3)
     }
     
     label_format <- function(l) {
-      scaled = case_when(l >= 1E3 ~ paste0(formatC(
-        l / 1E3,
-        digits = 0,
-        big.mark = ",",
-        format = "f"
-      ), "K"),
-      l %% 1 > 0 ~ paste0(formatC(
-        l,
-        format = "f",
-        digits = 2,
-        decimal.mark = '.'
-      )),
-      TRUE ~ paste0(l))
+      scaled = case_when(
+        l >= 1E3 ~ paste0(formatC(
+          l / 1E3,
+          digits = 0,
+          big.mark = ",",
+          format = "f"
+        ), "K"),
+        (abs(l) >= 0.01 & l %% 1 > 0) ~ paste0(formatC(
+          l,
+          format = "f",
+          digits = 2,
+          decimal.mark = '.'
+        )),
+        TRUE ~ paste0(l)
+      )
       return(scaled)
     }
     
@@ -302,8 +307,25 @@ plot_multiple_slope_chart <-
     
     if (dark) {
       point_line_color <- "white"
+      overall_style <- dark_clean_style()
     } else {
       point_line_color <- "#2F2F2F"
+      overall_style <- clean_style()
+    }
+    
+    if (night_sky) {
+      small_multiple_theme <- theme(
+        panel.grid.major.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.text.x = element_text(
+          family = "Roboto Thin",
+          size = 8,
+          color = "white"
+        )
+      )
+    } else {
+      small_multiple_theme <-
+        theme(panel.grid.major.y = element_line(size = 0.1, colour = point_line_color))
     }
     
     plot <-
@@ -318,24 +340,100 @@ plot_multiple_slope_chart <-
                          expand = expand_scale(0, 0),
                          labels = label_format) +
       list(
-        theme_minimal() + dark_clean_style() + theme(
+        theme_minimal() + overall_style + theme(
           plot.margin = unit(c(1, 1, 1, 1), "lines"),
           panel.spacing = unit(2, "lines"),
           strip.text.x = element_text(margin = margin(0, 0, 10, 0))
-        )
+        ) + small_multiple_theme
       ) +
       facet_wrap(~ name, scale = "free_y") +
       coord_cartesian(clip = "off") +
-      labs(title = title, subtitle = "A comparison between a collaborative track and a random track by each of the artists.")
+      labs(title = title,
+           subtitle = "A comparison between a collaborative track and a random track by each of the artists.")
     
     return(plot)
   }
 
-plot_multiple_slope_chart(feat_work, "track_artist", track_features, "group", dark = TRUE)
-# ggsave("spotify_songs_small_multiple_slope_chart.png")
+plot_multiple_slope_chart(
+  feat_work,
+  "track_artist",
+  track_features,
+  "group",
+  dark = TRUE,
+  night_sky = TRUE
+)
+ggsave("spotify_songs_small_multiple_slope_chart_night_sky.png")
 
-plot_multiple_slope_chart(feat_work_2, "track_artist", track_features, "group")
+plot_multiple_slope_chart(feat_work,
+                          "track_artist",
+                          track_features,
+                          "group")
+ggsave("spotify_songs_small_multiple_slope_chart.png")
 
-feat_work[track_features]
-feat_work$tempo
-feat_work$instrumentalness
+# Collaborations (according to track_name).
+feat_names_track_name <- "(?:feat.|featuring|ft.|ft|feat)"
+feat_names_track_name_with <- "(?:feat.|featuring|ft.|ft|feat|with)"
+
+feat_track_name <-
+  spotify_songs_work %>% filter(grepl(
+    paste("(\\s|\\()", feat_names_track_name, "\\s", sep = ""),
+    track_name,
+    ignore.case = TRUE
+  ))
+glimpse(feat_track_name)
+
+# Split track_name column.
+# The new column contains only the first artist of the collaboration.
+track_name_regex <- paste("(?:\\s|\\(|\\[)", feat_names_track_name_with, "\\s", "([\\w\\s\\.]+)(?:\\.|\\]|\\))", sep = "")
+
+feat_artist_col <- 
+  str_match(spotify_songs_work$track_name, regex(track_name_regex, ignore_case = TRUE))
+feat_artist_col
+
+feat_artists_df <- 
+  spotify_songs_work %>% 
+  mutate(feat_artist = feat_artist_col[, 2])
+
+get_two_artists_df <-
+  function(df,
+           artist_1_col,
+           artist_2_col,
+           artist_1,
+           artist_2) {
+    out <- tryCatch({
+      out_df <- df %>%
+        filter(grepl(
+          paste("(", artist_1, "|", artist_2, ")", sep = ""),
+          get(artist_1_col),
+          ignore.case = TRUE
+        ))
+      
+      masked_df <- out_df %>%
+        filter(grepl(
+          paste("(", artist_1, "|", artist_2, ")", sep = ""),
+          get(artist_2_col),
+          ignore.case = TRUE
+        ))
+      
+      if (nrow(masked_df) == 0) {
+        stop(
+          paste(
+            artist_1,
+            "and",
+            artist_2,
+            "don't collaborate on any music track.\n",
+            sep = " "
+          )
+        )
+      }
+      
+      out_df
+    },
+    error = function(cond) {
+      message(cond)
+      return(NA)
+    })
+    return(out)
+  }
+
+lamar_rihanna_df <- get_two_artists_df(feat_artists_df, "track_artist", "feat_artist", "Kendrick Lamar", "Rihanna")
