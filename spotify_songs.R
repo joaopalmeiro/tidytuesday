@@ -384,14 +384,22 @@ glimpse(feat_track_name)
 
 # Split track_name column.
 # The new column contains only the first artist of the collaboration.
-track_name_regex <- paste("(?:\\s|\\(|\\[)", feat_names_track_name_with, "\\s", "([\\w\\s\\.]+)(?:\\.|\\]|\\))", sep = "")
+track_name_regex <-
+  paste(
+    "(?:\\s|\\(|\\[)",
+    feat_names_track_name_with,
+    "\\s",
+    "([\\w\\s\\.]+)(?:\\.|\\]|\\))",
+    sep = ""
+  )
 
-feat_artist_col <- 
-  str_match(spotify_songs_work$track_name, regex(track_name_regex, ignore_case = TRUE))
+feat_artist_col <-
+  str_match(spotify_songs_work$track_name,
+            regex(track_name_regex, ignore_case = TRUE))
 feat_artist_col
 
-feat_artists_df <- 
-  spotify_songs_work %>% 
+feat_artists_df <-
+  spotify_songs_work %>%
   mutate(feat_artist = feat_artist_col[, 2])
 
 get_two_artists_df <-
@@ -427,7 +435,10 @@ get_two_artists_df <-
         )
       }
       
-      out_df
+      # Convert ms to min.
+      out_df$duration_ms <- out_df$duration_ms / (60 * 1000)
+      
+      out_df %>% rename(duration_min = duration_ms)
     },
     error = function(cond) {
       message(cond)
@@ -436,4 +447,61 @@ get_two_artists_df <-
     return(out)
   }
 
-lamar_rihanna_df <- get_two_artists_df(feat_artists_df, "track_artist", "feat_artist", "Kendrick Lamar", "Rihanna")
+lamar_rihanna_df <-
+  get_two_artists_df(feat_artists_df,
+                     "track_artist",
+                     "feat_artist",
+                     "Kendrick Lamar",
+                     "Rihanna")
+
+# Freedman–Diaconis rule.
+fd <- function(x) {
+  n <- length(x)
+  r <- IQR(x)
+  
+  2 * r / n ^ (1 / 3)
+}
+
+lamar_rihanna_df %>%
+  select(c('track_artist', track_features)) %>%
+  pivot_longer(cols = track_features)
+
+density_colors <- c("#D1A06B", "#87817C")
+
+lamar_rihanna_feat <- lamar_rihanna_df %>%
+  filter(grepl(
+    paste("(", "Kendrick Lamar", "|", "Rihanna", ")", sep = ""),
+    get("feat_artist"),
+    ignore.case = TRUE
+  )) %>% select(c('track_artist', track_features)) %>%
+  pivot_longer(cols = track_features) %>%
+  group_by(name) %>%
+  summarise(mean_value = mean(value))
+
+lamar_rihanna_df %>%
+  select(c('track_artist', track_features)) %>%
+  pivot_longer(cols = track_features) %>%
+  ggplot(aes(x = value)) +
+  geom_density(aes(color = track_artist), alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = density_colors) +
+  geom_vline(
+    data = lamar_rihanna_feat,
+    mapping = aes(xintercept = mean_value),
+    color = "#CBCBCB"
+  ) +
+  geom_hline(yintercept = 0,
+             size = 0.5,
+             colour = "#CBCBCB") +
+  facet_wrap( ~ name, ncol = 3, scales = 'free') +
+  list(
+    theme_minimal() +
+      clean_style() +
+      theme(
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "none"
+      )
+  ) +
+  labs(title = "title_test", subtitle = "subtitle_test")
+
+# ggsave("spotify_songs_small_multiple_kde.png")
