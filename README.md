@@ -16,6 +16,8 @@ This repository contains my contributions to the [#TidyTuesday](https://github.c
 
 ![Small Multiple Slope Chart](2020-01-21/spotify_songs_small_multiple_slope_chart.png)
 
+![Small Multiple Slope Chart - Partial Night Sky Mode](2020-01-21/spotify_songs_small_multiple_slope_chart_partial_night_sky.png)
+
 ![Small Multiple Slope Chart - Night Sky Mode](2020-01-21/spotify_songs_small_multiple_slope_chart_night_sky.png)
 
 ![Small Multiple KDE](2020-01-21/spotify_songs_small_multiple_kde.png)

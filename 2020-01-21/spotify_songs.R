@@ -231,7 +231,7 @@ plot_triple_slope_chart <- function(df, x, y, group) {
 }
 
 plot_triple_slope_chart(feat_work, "track_artist", "danceability", "group")
-ggsave("spotify_songs_slope_chart.png")
+# ggsave("spotify_songs_slope_chart.png")
 
 plot_triple_slope_chart(feat_work, "track_artist", "duration_min", "group")
 plot_triple_slope_chart(feat_work, "track_artist", "instrumentalness", "group")
@@ -272,9 +272,10 @@ plot_multiple_slope_chart <-
            group,
            title_verbose = TRUE,
            dark = FALSE,
-           night_sky = FALSE) {
+           night_sky = FALSE,
+           no_y_axis_values = 3) {
     y_axis_breaks <- function(y) {
-      seq(min(y), max(y), length.out = 3)
+      seq(min(y), max(y), length.out = no_y_axis_values)
     }
     
     label_format <- function(l) {
@@ -361,13 +362,28 @@ plot_multiple_slope_chart(
   dark = TRUE,
   night_sky = TRUE
 )
-ggsave("spotify_songs_small_multiple_slope_chart_night_sky.png")
+# ggsave("spotify_songs_small_multiple_slope_chart_night_sky.png")
 
 plot_multiple_slope_chart(feat_work,
                           "track_artist",
                           track_features,
                           "group")
-ggsave("spotify_songs_small_multiple_slope_chart.png")
+# ggsave("spotify_songs_small_multiple_slope_chart.png")
+
+plot_multiple_slope_chart(
+  feat_work,
+  "track_artist",
+  track_features,
+  "group",
+  dark = TRUE,
+  night_sky = FALSE,
+  no_y_axis_values = 2
+) + theme(
+  strip.text.x = element_text(family = "Roboto Thin",
+                              size = 8),
+  axis.text = element_text(family = "Roboto Thin", size = 8)
+)
+# ggsave("spotify_songs_small_multiple_slope_chart_partial_night_sky.png")
 
 # Collaborations (according to track_name).
 feat_names_track_name <- "(?:feat.|featuring|ft.|ft|feat)"
@@ -541,4 +557,4 @@ plot_densities(
   "feat_artist",
   track_features
 )
-ggsave("spotify_songs_small_multiple_kde.png")
+# ggsave("spotify_songs_small_multiple_kde.png")
