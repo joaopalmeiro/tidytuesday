@@ -45,27 +45,45 @@ print(count_species_scientific_name,
       n = nrow(count_species_scientific_name))
 
 # Acer buergeranum -> Acer buergerianum
-ids_pre_replacement <- sf_tree_work %>% filter(species_name == "Acer buergeranum")
+ids_pre_replacement <-
+  sf_tree_work %>% filter(species_name == "Acer buergeranum")
 ids_pre_replacement <- ids_pre_replacement$tree_id
 ids_pre_replacement
 
 sf_tree_work$species_name <-
-  str_replace(sf_tree_work$species_name, "Acer buergeranum", "Acer buergerianum")
-ids_post_replacement <- sf_tree_work %>% filter(species_name == "Acer buergerianum")
+  str_replace(sf_tree_work$species_name,
+              "Acer buergeranum",
+              "Acer buergerianum")
+ids_post_replacement <-
+  sf_tree_work %>% filter(species_name == "Acer buergerianum")
 ids_post_replacement <- ids_post_replacement$tree_id
 ids_post_replacement
 
 sum(ids_pre_replacement == ids_post_replacement) == length(ids_pre_replacement)
 
 # Magnolia grandiflora 'Saint Mary' -> Magnolia grandiflora 'St. Mary'
-ids_pre_replacement <- sf_tree_work %>% filter(species_name == "Magnolia grandiflora 'Saint Mary'")
+ids_pre_replacement <-
+  sf_tree_work %>% filter(species_name == "Magnolia grandiflora 'Saint Mary'")
 ids_pre_replacement <- ids_pre_replacement$tree_id
 ids_pre_replacement
 
 sf_tree_work$species_name <-
-  str_replace(sf_tree_work$species_name, "Magnolia grandiflora 'Saint Mary'", "Magnolia grandiflora 'St. Mary'")
-ids_post_replacement <- sf_tree_work %>% filter(species_name == "Magnolia grandiflora 'St. Mary'")
+  str_replace(
+    sf_tree_work$species_name,
+    "Magnolia grandiflora 'Saint Mary'",
+    "Magnolia grandiflora 'St. Mary'"
+  )
+ids_post_replacement <-
+  sf_tree_work %>% filter(species_name == "Magnolia grandiflora 'St. Mary'")
 ids_post_replacement <- ids_post_replacement$tree_id
 ids_post_replacement
 
 sum(ids_pre_replacement == ids_post_replacement) == length(ids_pre_replacement)
+
+# Join both datasets.
+sf_tree_merged <-
+  sf_tree_work %>% left_join(
+    sf_tree_guide %>% select(`Scientific Name`, `Water Use`),
+    by = c("species_name" = "Scientific Name")
+  ) %>% rename(water_use = `Water Use`)
+glimpse(sf_tree_merged)
