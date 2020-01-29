@@ -96,12 +96,19 @@ glimpse(sf_tree_merged)
 sf_tree_merged$year <- year(sf_tree_merged$date)
 sf_tree_merged$month <- month(sf_tree_merged$date, label = TRUE)
 sf_tree_merged$week_day <- wday(sf_tree_merged$date, label = TRUE)
+sf_tree_merged$week_day_no <- wday(sf_tree_merged$date, label = FALSE)
 sf_tree_merged$month_year <-
   factor(paste(sf_tree_merged$month, sf_tree_merged$year, sep = " "))
 sf_tree_merged$week_year <- week(sf_tree_merged$date)
 
-# sf_tree_merged <- sf_tree_merged %>%
-#   group_by(month_year) %>%
-#   mutate(week_month_teste = 1 + week_year - min(week_year))
+# lubridate: each week starts on Sunday (by default).
+first_day_of_month_wday <- function(dx) {
+  day(dx) <- 1
+  wday(dx)
+}
 
-teste <- sf_tree_merged %>% select(date, week_month_teste, teste2)
+# The -1 is necessary because when the month starts on a Sunday this adjustment is not necessary.
+sf_tree_merged$week_month <-
+  ceiling((
+    day(sf_tree_merged$date) + first_day_of_month_wday(sf_tree_merged$date) - 1
+  ) / 7)
