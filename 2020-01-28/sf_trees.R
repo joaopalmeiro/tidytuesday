@@ -1,4 +1,6 @@
 library(tidyverse)
+library(lubridate)
+library(dplyr)
 
 # Dataset.
 sf_trees <-
@@ -15,11 +17,11 @@ sum(duplicated(sf_trees$tree_id))
 
 is.na(sf_trees) %>% colSums()
 
-count_takeover <- sf_trees %>% count(caretaker, sort = TRUE)
+count_takeover <- sf_trees %>% dplyr::count(caretaker, sort = TRUE)
 print(count_takeover, n = nrow(count_takeover))
 sum(count_takeover$n) == nrow(sf_trees)
 
-count_species <- sf_trees %>% count(species, sort = TRUE)
+count_species <- sf_trees %>% dplyr::count(species, sort = TRUE)
 print(count_species, n = nrow(count_species))
 sum(count_species$n) == nrow(sf_trees)
 
@@ -38,11 +40,11 @@ sf_tree_work$species_name <-
 sf_tree_work$species_name[sf_tree_work$species_name == ""] <- NA
 
 count_species_common_name <-
-  sf_tree_work %>% count(species_name, sort = FALSE)
+  sf_tree_work %>% dplyr::count(species_name, sort = FALSE)
 print(count_species_common_name, n = nrow(count_species_common_name))
 
 count_species_scientific_name <-
-  sf_tree_work %>% count(species_name, sort = FALSE)
+  sf_tree_work %>% dplyr::count(species_name, sort = FALSE)
 print(count_species_scientific_name,
       n = nrow(count_species_scientific_name))
 
@@ -89,3 +91,17 @@ sf_tree_merged <-
     by = c("species_name" = "Scientific Name")
   ) %>% rename(water_use = `Water Use`)
 glimpse(sf_tree_merged)
+
+# Date manipulation.
+sf_tree_merged$year <- year(sf_tree_merged$date)
+sf_tree_merged$month <- month(sf_tree_merged$date, label = TRUE)
+sf_tree_merged$week_day <- wday(sf_tree_merged$date, label = TRUE)
+sf_tree_merged$month_year <-
+  factor(paste(sf_tree_merged$month, sf_tree_merged$year, sep = " "))
+sf_tree_merged$week_year <- week(sf_tree_merged$date)
+
+# sf_tree_merged <- sf_tree_merged %>%
+#   group_by(month_year) %>%
+#   mutate(week_month_teste = 1 + week_year - min(week_year))
+
+teste <- sf_tree_merged %>% select(date, week_month_teste, teste2)
