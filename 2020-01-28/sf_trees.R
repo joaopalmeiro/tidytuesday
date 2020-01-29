@@ -13,6 +13,8 @@ glimpse(sf_tree_guide)
 
 sum(duplicated(sf_trees$tree_id))
 
+is.na(sf_trees) %>% colSums()
+
 count_takeover <- sf_trees %>% count(caretaker, sort = TRUE)
 print(count_takeover, n = nrow(count_takeover))
 sum(count_takeover$n) == nrow(sf_trees)
