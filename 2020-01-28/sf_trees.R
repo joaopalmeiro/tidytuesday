@@ -96,7 +96,8 @@ glimpse(sf_tree_merged)
 sf_tree_merged$year <- year(sf_tree_merged$date)
 sf_tree_merged$month <- month(sf_tree_merged$date, label = TRUE)
 sf_tree_merged$week_day <- wday(sf_tree_merged$date, label = TRUE)
-sf_tree_merged$week_day_no <- wday(sf_tree_merged$date, label = FALSE)
+sf_tree_merged$week_day_no <-
+  wday(sf_tree_merged$date, label = FALSE)
 sf_tree_merged$month_year <-
   factor(paste(sf_tree_merged$month, sf_tree_merged$year, sep = " "))
 sf_tree_merged$week_year <- week(sf_tree_merged$date)
@@ -112,3 +113,30 @@ sf_tree_merged$week_month <-
   ceiling((
     day(sf_tree_merged$date) + first_day_of_month_wday(sf_tree_merged$date) - 1
   ) / 7)
+
+# Dataset for the calendar plot.
+sf_tree_calendar <-
+  sf_tree_merged %>% drop_na(date) %>% group_by(date, week_month, week_day, month, year) %>% tally()
+glimpse(sf_tree_calendar)
+
+sf_tree_calendar_sanity_check <-
+  sf_tree_merged %>% drop_na(date) %>% group_by(date) %>% tally()
+sum(sf_tree_calendar_sanity_check$n == sf_tree_calendar$n) == nrow(sf_tree_calendar_sanity_check)
+
+count_year <-
+  sf_tree_calendar %>% ungroup() %>% dplyr::count(year, sort = FALSE)
+print(count_year, n = nrow(count_year))
+
+# Calendar plot.
+sf_tree_calendar %>% filter(year >= 2010 & year <= 2019) %>%
+  ggplot(aes(week_month, week_day, fill = n)) +
+  geom_tile(colour = "white") + 
+  facet_grid(year ~ month) + 
+  scale_fill_gradient(low = "#EAFBEA", high = "#1F6650") +
+  labs(x="",
+       y="",
+       title = "", 
+       subtitle="", 
+       fill="") + theme_bw()
+
+# ggsave("calendar_plot.png")
