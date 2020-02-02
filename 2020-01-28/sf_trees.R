@@ -2,6 +2,8 @@ library(tidyverse)
 library(lubridate)
 library(dplyr)
 
+packageVersion("ggplot2")
+
 # Dataset.
 sf_trees <-
   readr::read_csv(
@@ -128,15 +130,143 @@ count_year <-
 print(count_year, n = nrow(count_year))
 
 # Calendar plot.
-sf_tree_calendar %>% filter(year >= 2010 & year <= 2019) %>%
-  ggplot(aes(week_month, week_day, fill = n)) +
-  geom_tile(colour = "white") + 
-  facet_grid(year ~ month) + 
-  scale_fill_gradient(low = "#EAFBEA", high = "#1F6650") +
-  labs(x="",
-       y="",
-       title = "", 
-       subtitle="", 
-       fill="") + theme_bw()
+title_style <- function() {
+  theme(
+    plot.title.position = "plot",
+    plot.title = element_text(colour = "#2F2F2F"),
+    plot.subtitle = element_text(colour = "#2F2F2F")
+  )
+}
+
+line_break_year <- function(year) {
+  paste(substr(year, 1, ceiling(nchar(year) / 2)),
+        substr(year, ceiling(nchar(year) / 2) + 1, nchar(year)),
+        sep = "\n")
+}
+
+get_missing_dates <-
+  function(dates_not_missing, start_year, end_year) {
+    dates <-
+      seq(as.Date(paste(start_year, "-01-01", sep = "")), as.Date(paste(end_year, "-12-31", sep =
+                                                                          "")), by = "days")
+    
+    dates = dates[!(dates %in% dates_not_missing)]
+    
+    dates_df <- tibble(
+      date = dates,
+      week_month = ceiling((
+        day(dates) + first_day_of_month_wday(dates) - 1
+      ) / 7),
+      week_day = wday(dates, label = TRUE),
+      month = month(dates, label = TRUE),
+      year = year(dates),
+      n = NA
+    )
+    
+    return(dates_df)
+  }
+
+get_calendar_plot <-
+  function(df,
+           start_year,
+           end_year,
+           week_month_col,
+           week_day_col,
+           count_col,
+           year_col,
+           month_col) {
+    black_color <- "#2F2F2F"
+    gray_color <- alpha("#CBCBCB", 0.2)
+    brown_color <- "#E6A157"
+    
+    df_work <- df %>% filter(year >= start_year & year <= end_year)
+    
+    # Five-number summary.
+    min_count <- min(df_work[[count_col]])
+    median_count <- median(df_work[[count_col]])
+    max_count <- max(df_work[[count_col]])
+    # middle_count <- ceiling((max_count - min_count) / 2)
+    
+    lower_quartile_count <-
+      ceiling(quantile(df_work[[count_col]], probs = c(0.25))[[1]])
+    upper_quartile_count <-
+      ceiling(quantile(df_work[[count_col]], probs = c(0.75))[[1]])
+    
+    breaks_legend <-
+      c(min_count,
+        lower_quartile_count,
+        median_count,
+        upper_quartile_count,
+        max_count)
+    # breaks_legend <- c(min_count, middle_count, max_count)
+    
+    df_work <-
+      bind_rows(df_work,
+                get_missing_dates(df_work$date, start_year, end_year))
+    
+    if (start_year == end_year) {
+      title <-
+        bquote("Number of trees planted in" ~ bold(.(toString(start_year))) ~ "in San Francisco.")
+    } else {
+      title <-
+        bquote("Number of trees planted between" ~ bold(.(toString(start_year))) ~ "and" ~ bold(.(toString(end_year))) ~ "in San Francisco.")
+    }
+    
+    calendar_plot <-
+      df_work %>%
+      ggplot(aes_string(week_month_col, week_day_col, fill = count_col)) +
+      geom_tile(colour = "white") +
+      coord_fixed(ratio = 1) +
+      facet_grid(reformulate(month_col, year_col),
+                 labeller = labeller(.rows = line_break_year)) +
+      scale_fill_gradient(
+        low = "#EAFBEA",
+        high = "#1F6650",
+        na.value = brown_color,
+        breaks = breaks_legend,
+        guide = guide_legend(title.position = "top",
+                             label.position = "bottom")
+      ) +
+      scale_x_discrete(limits = c(1, 6)) +
+      scale_y_discrete(breaks = c("Sun", "Sat")) +
+      list(
+        theme_bw(base_size = 10) + title_style() + theme(
+          panel.grid = element_blank(),
+          strip.background = element_blank(),
+          strip.text.y = element_text(angle = 0),
+          panel.border = element_rect(colour = gray_color),
+          legend.position = "top",
+          legend.direction = "horizontal",
+          axis.title = element_blank(),
+          legend.margin = margin(unit(0, "cm")),
+          axis.ticks = element_blank(),
+          legend.key.height = unit(0.2, "cm"),
+          legend.text = element_text(size = 8, colour = black_color),
+          legend.title = element_text(size = 8, colour = black_color),
+          strip.text = element_text(colour = black_color, margin = margin(
+            t = 0,
+            r = 0,
+            b = 0,
+            l = 0
+          )),
+          axis.text = element_text(colour = black_color),
+          plot.margin = margin(unit(0, "cm"))
+        )
+      ) +
+      labs(title = title,
+           subtitle = "",
+           fill = "Five-number summary")
+    
+    return(calendar_plot)
+  }
+
+get_calendar_plot(sf_tree_calendar,
+                  2015,
+                  2019,
+                  "week_month",
+                  "week_day",
+                  "n",
+                  "year",
+                  "month")
 
 # ggsave("calendar_plot.png")
