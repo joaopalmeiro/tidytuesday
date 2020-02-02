@@ -1,8 +1,10 @@
 library(tidyverse)
 library(lubridate)
 library(dplyr)
+library(ggtext)
 
 packageVersion("ggplot2")
+packageVersion("ggtext")
 
 # Dataset.
 sf_trees <-
@@ -134,7 +136,7 @@ title_style <- function() {
   theme(
     plot.title.position = "plot",
     plot.title = element_text(colour = "#2F2F2F"),
-    plot.subtitle = element_text(colour = "#2F2F2F")
+    plot.subtitle = element_markdown(colour = "#2F2F2F")
   )
 }
 
@@ -174,18 +176,24 @@ get_calendar_plot <-
            week_day_col,
            count_col,
            year_col,
-           month_col) {
+           month_col,
+           date_col) {
     black_color <- "#2F2F2F"
     gray_color <- alpha("#CBCBCB", 0.2)
     brown_color <- "#E6A157"
     
-    df_work <- df %>% filter(year >= start_year & year <= end_year)
+    df_work <-
+      df %>% filter(get(year_col) >= start_year &
+                      get(year_col) <= end_year)
     
     # Five-number summary.
     min_count <- min(df_work[[count_col]])
     median_count <- median(df_work[[count_col]])
     max_count <- max(df_work[[count_col]])
     # middle_count <- ceiling((max_count - min_count) / 2)
+    
+    date_w_max_tree <-
+      (df_work %>% filter(get(count_col) == max_count))$date
     
     lower_quartile_count <-
       ceiling(quantile(df_work[[count_col]], probs = c(0.25))[[1]])
@@ -200,9 +208,23 @@ get_calendar_plot <-
         max_count)
     # breaks_legend <- c(min_count, middle_count, max_count)
     
+    missing_dates_df <-
+      get_missing_dates(df_work[[date_col]], start_year, end_year)
+    
+    days_wo_trees <- nrow(missing_dates_df)
+    
     df_work <-
-      bind_rows(df_work,
-                get_missing_dates(df_work$date, start_year, end_year))
+      bind_rows(df_work, missing_dates_df)
+    
+    total_days <- nrow(df_work)
+    
+    month_year_w_max_mean <- df_work %>%
+      group_by(year_c = get(year_col),
+               month_c = get(month_col)) %>%
+      summarise(mean = sum(get(count_col), na.rm = TRUE) / length(get(count_col)))
+    
+    month_year_w_max_mean <-
+      month_year_w_max_mean %>% ungroup() %>% filter(mean == max(mean))
     
     if (start_year == end_year) {
       title <-
@@ -211,6 +233,26 @@ get_calendar_plot <-
       title <-
         bquote("Number of trees planted between" ~ bold(.(toString(start_year))) ~ "and" ~ bold(.(toString(end_year))) ~ "in San Francisco.")
     }
+    
+    # 01/01/2019 was the day with the most trees planted (16).
+    # On average, February 2019 was the month with the most trees planted (15 per day).
+    
+    subtitle <-
+      paste(
+        "There were no trees planted in <span style = 'color:",
+        brown_color,
+        ";'>**",
+        days_wo_trees,
+        "**</span>/",
+        total_days,
+        " days. ",
+        date_w_max_tree,
+        " was the day with the most trees planted",
+        sep = ""
+      )
+    
+    base_size <- 10
+    half_line <- base_size / 2
     
     calendar_plot <-
       df_work %>%
@@ -243,10 +285,9 @@ get_calendar_plot <-
       scale_x_discrete(limits = c(1, 6)) +
       scale_y_discrete(breaks = c("Sun", "Sat")) +
       list(
-        theme_bw(base_size = 10) + title_style() + theme(
+        theme_bw(base_size = base_size) + title_style() + theme(
           panel.grid = element_blank(),
           strip.background = element_blank(),
-          strip.text.y = element_text(angle = 0),
           panel.border = element_rect(colour = gray_color),
           legend.position = "top",
           legend.direction = "horizontal",
@@ -256,19 +297,19 @@ get_calendar_plot <-
           legend.key.height = unit(0.2, "cm"),
           legend.text = element_text(size = 8, colour = black_color),
           legend.title = element_text(size = 8, colour = black_color),
-          strip.text = element_text(colour = black_color, margin = margin(
-            t = 0,
-            r = 0,
-            b = 0,
-            l = 0
-          )),
+          strip.text = element_text(colour = black_color),
           axis.text = element_text(colour = black_color),
-          plot.margin = margin(unit(0, "cm"))
+          plot.margin = margin(half_line, half_line, half_line, half_line),
+          strip.text.y = element_text(angle = 0, margin = margin(l = 0.8 * half_line /
+                                                                   2)),
+          strip.placement = "outside",
+          strip.text.x = element_text(margin = margin(b = 0.8 * half_line /
+                                                        2))
         )
       ) +
       labs(
         title = title,
-        subtitle = "",
+        subtitle = subtitle,
         fill = "Five-number summary",
         colour = "Continuous summary"
       )
@@ -277,12 +318,13 @@ get_calendar_plot <-
   }
 
 get_calendar_plot(sf_tree_calendar,
-                  2015,
+                  2017,
                   2019,
                   "week_month",
                   "week_day",
                   "n",
                   "year",
-                  "month")
+                  "month",
+                  "date")
 
 # ggsave("calendar_plot.png")
