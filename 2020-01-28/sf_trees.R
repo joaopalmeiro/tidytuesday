@@ -215,6 +215,16 @@ get_calendar_plot <-
     calendar_plot <-
       df_work %>%
       ggplot(aes_string(week_month_col, week_day_col, fill = count_col)) +
+      geom_tile(mapping = aes_string(colour = count_col), size = 0) +
+      scale_color_gradient(
+        low = "#EAFBEA",
+        high = "#1F6650",
+        guide = guide_colorbar(
+          title.position = "top",
+          label.position = "bottom",
+          order = 1
+        )
+      ) +
       geom_tile(colour = "white") +
       coord_fixed(ratio = 1) +
       facet_grid(reformulate(month_col, year_col),
@@ -224,8 +234,11 @@ get_calendar_plot <-
         high = "#1F6650",
         na.value = brown_color,
         breaks = breaks_legend,
-        guide = guide_legend(title.position = "top",
-                             label.position = "bottom")
+        guide = guide_legend(
+          title.position = "top",
+          label.position = "bottom",
+          order = 2
+        )
       ) +
       scale_x_discrete(limits = c(1, 6)) +
       scale_y_discrete(breaks = c("Sun", "Sat")) +
@@ -253,9 +266,12 @@ get_calendar_plot <-
           plot.margin = margin(unit(0, "cm"))
         )
       ) +
-      labs(title = title,
-           subtitle = "",
-           fill = "Five-number summary")
+      labs(
+        title = title,
+        subtitle = "",
+        fill = "Five-number summary",
+        colour = "Continuous summary"
+      )
     
     return(calendar_plot)
   }
