@@ -330,13 +330,13 @@ get_calendar_plot <-
   }
 
 plot <- get_calendar_plot(sf_tree_calendar,
-                  2010,
-                  2019,
-                  "week_month",
-                  "week_day",
-                  "n",
-                  "year",
-                  "month",
-                  "date")
+                          2010,
+                          2019,
+                          "week_month",
+                          "week_day",
+                          "n",
+                          "year",
+                          "month",
+                          "date")
 
 # ggsave("calendar_plot.png", plot = plot)

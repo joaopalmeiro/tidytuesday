@@ -24,6 +24,6 @@ This repository contains my contributions to the [#TidyTuesday](https://github.c
 
 ---
 
-[`2020-01-28`](https://github.com/rfordatascience/tidytuesday/tree/master/data/2020/2020-01-28) | **San Francisco Trees** | [Code](2020-01-28/sf_trees.R) | [Tweet]()
+[`2020-01-28`](https://github.com/rfordatascience/tidytuesday/tree/master/data/2020/2020-01-28) | **San Francisco Trees** | [Code](2020-01-28/sf_trees.R) | [Tweet](https://twitter.com/joaompalmeiro/status/1224130573632987137)
 
 ![Calendar Plot](2020-01-28/calendar_plot.png)
