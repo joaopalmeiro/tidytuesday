@@ -21,3 +21,9 @@ This repository contains my contributions to the [#TidyTuesday](https://github.c
 ![Small Multiple Slope Chart - Night Sky Mode](2020-01-21/spotify_songs_small_multiple_slope_chart_night_sky.png)
 
 ![Small Multiple KDE](2020-01-21/spotify_songs_small_multiple_kde.png)
+
+---
+
+[`2020-01-28`](https://github.com/rfordatascience/tidytuesday/tree/master/data/2020/2020-01-28) | **San Francisco Trees** | [Code](2020-01-28/sf_trees.R) | [Tweet]()
+
+![Calendar Plot](2020-01-28/calendar_plot.png)

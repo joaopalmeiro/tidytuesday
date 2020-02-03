@@ -136,7 +136,12 @@ title_style <- function() {
   theme(
     plot.title.position = "plot",
     plot.title = element_text(colour = "#2F2F2F"),
-    plot.subtitle = element_markdown(colour = "#2F2F2F")
+    plot.subtitle = element_markdown(
+      colour = "#2F2F2F",
+      margin = margin(0, 0, 20, 0),
+      lineheight = 1.5,
+      size = 8
+    )
   )
 }
 
@@ -228,14 +233,13 @@ get_calendar_plot <-
     
     if (start_year == end_year) {
       title <-
-        bquote("Number of trees planted in" ~ bold(.(toString(start_year))) ~ "in San Francisco.")
+        bquote(bold("Number of trees planted in") ~ .(toString(start_year)) ~ bold("in San Francisco."))
     } else {
       title <-
-        bquote("Number of trees planted between" ~ bold(.(toString(start_year))) ~ "and" ~ bold(.(toString(end_year))) ~ "in San Francisco.")
+        bquote(
+          bold("Number of trees planted between") ~ .(toString(start_year)) ~ bold("and") ~ .(toString(end_year)) ~ bold("in San Francisco.")
+        )
     }
-    
-    # 01/01/2019 was the day with the most trees planted (16).
-    # On average, February 2019 was the month with the most trees planted (15 per day).
     
     subtitle <-
       paste(
@@ -245,9 +249,17 @@ get_calendar_plot <-
         days_wo_trees,
         "**</span>/",
         total_days,
-        " days. ",
+        " days.<br>**",
         date_w_max_tree,
-        " was the day with the most trees planted",
+        "** was the day with the most trees planted (",
+        max_count,
+        ").<br>On average, **",
+        month_year_w_max_mean$month_c,
+        " ",
+        month_year_w_max_mean$year_c,
+        "** was the month with the most trees planted (",
+        round(month_year_w_max_mean$mean, 2),
+        " per day).",
         sep = ""
       )
     
@@ -317,8 +329,8 @@ get_calendar_plot <-
     return(calendar_plot)
   }
 
-get_calendar_plot(sf_tree_calendar,
-                  2017,
+plot <- get_calendar_plot(sf_tree_calendar,
+                  2010,
                   2019,
                   "week_month",
                   "week_day",
@@ -327,4 +339,4 @@ get_calendar_plot(sf_tree_calendar,
                   "month",
                   "date")
 
-# ggsave("calendar_plot.png")
+# ggsave("calendar_plot.png", plot = plot)
