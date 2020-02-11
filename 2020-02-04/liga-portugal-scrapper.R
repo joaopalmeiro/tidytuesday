@@ -5,6 +5,7 @@
 # URL: https://www.ligaportugal.pt/en/homepage/
 # Accessed: 2020-02-11
 
+library(tidyverse)
 library(rvest)
 
 get_liga_portugal_stats <-
@@ -26,7 +27,9 @@ get_liga_portugal_stats <-
       `Number of home games` = integer(),
       `Average attendance` = character(),
       `Average ocupation %` = character(),
-      `Season total` = character()
+      `Season total` = character(),
+      `Season start year` = integer(),
+      `Season end year` = integer()
     )
     
     while (first_season_start_year < last_season_end_year) {
@@ -53,6 +56,9 @@ get_liga_portugal_stats <-
             html_node("table") %>%
             html_table(fill = TRUE)
           
+          table["Season start year"] <- first_season_start_year
+          table["Season end year"] <- first_season_start_year + 1
+          
           final_table <- bind_rows(final_table, table)
         } else if (first_season_start_year >= 2010 &
                    first_season_start_year < 2014) {
@@ -71,6 +77,9 @@ get_liga_portugal_stats <-
             html_node("table") %>%
             html_table(fill = TRUE)
           
+          table["Season start year"] <- first_season_start_year
+          table["Season end year"] <- first_season_start_year + 1
+          
           final_table <- bind_rows(final_table, table)
         } else {
           premier_league_name <- "liganos"
@@ -87,6 +96,9 @@ get_liga_portugal_stats <-
           table <- s %>%
             html_node("table") %>%
             html_table(fill = TRUE)
+          
+          table["Season start year"] <- first_season_start_year
+          table["Season end year"] <- first_season_start_year + 1
           
           final_table <- bind_rows(final_table, table)
         }
