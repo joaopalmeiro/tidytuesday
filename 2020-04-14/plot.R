@@ -179,5 +179,6 @@ ggsave(
   ),
   width = 297,
   height = 420,
-  units = "mm"
+  units = "mm",
+  dpi = 320 # "retina"
 )
