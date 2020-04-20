@@ -54,7 +54,7 @@ highlight
 annotations <- data.frame(
   xpos = c(-Inf, Inf),
   ypos =  c(Inf, -Inf),
-  annotateText = c("Critics", "Release Year"),
+  annotateText = c("Critic", "Release Year"),
   hjustvar = c(0, 1),
   vjustvar = c(1, 0) # -0.05
 )
@@ -68,6 +68,19 @@ chart_colors <-
     min = "#DD7373",
     max = "#B33951"
   )
+
+title <-
+  paste0(
+    "How long is the period between the <span style = 'color:",
+    chart_colors$min,
+    ";'>",
+    "oldest</span> and <span style = 'color:",
+    chart_colors$max,
+    ";'>",
+    "most recent</span> tracks in each critic's top 5 favorite hip-hop tracks?"
+  )
+
+subtitle <- "The shortest and longest periods are **highlighted**."
 
 ggplot(df) +
   geom_segment(
@@ -134,25 +147,25 @@ ggplot(df) +
     panel.grid.minor = element_line(color = chart_colors$light_grey),
     plot.margin = margin(11.5, 11.5, 11.5, 11.5),
     plot.title = element_markdown(
-      size = 18 * 2,
+      size = 18,
       face = "bold",
       margin = margin(b = 10),
       color = chart_colors$main,
       family = "Roboto Condensed"
     ),
     plot.subtitle = element_markdown(
-      size = 13 * 2,
+      size = 13,
       margin = margin(b = 15),
-      family = "Roboto Condensed Light",
+      family = "Roboto Condensed",
       face = "plain",
       color = chart_colors$main
     ),
     plot.caption = element_text(color = paste0(chart_colors$main, "4D"), family = "Roboto Condensed"),
     plot.title.position = "plot"
   ) +
-  labs(title = "teste1",
-       subtitle = "teste",
-       caption = "Source: BBC Music/Datawrapper | Chart: João Palmeiro <Twitter: @joaompalmeiro>")
+  labs(title = title,
+       subtitle = subtitle,
+       caption = "Source: BBC Music | Chart: João Palmeiro <Twitter: @joaompalmeiro>")
 
 # A3 (vertical)
 ggsave(
