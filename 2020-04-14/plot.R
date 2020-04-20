@@ -1,6 +1,7 @@
 library(tidyverse)
 library(hrbrthemes)
 library(here)
+library(ggtext)
 
 polls <-
   readr::read_csv(
@@ -52,7 +53,7 @@ highlight
 # )
 annotations <- data.frame(
   xpos = c(-Inf, Inf),
-  ypos =  c(Inf,-Inf),
+  ypos =  c(Inf, -Inf),
   annotateText = c("Critics", "Release Year"),
   hjustvar = c(0, 1),
   vjustvar = c(1, 0) # -0.05
@@ -78,7 +79,7 @@ ggplot(df) +
     ),
     color = chart_colors$main,
     size = 0.5,
-    alpha = 1.0
+    alpha = 0.3
   ) +
   geom_segment(
     data = highlight,
@@ -95,13 +96,13 @@ ggplot(df) +
   geom_point(
     aes(x = critic_name, y = min_year),
     color = chart_colors$min,
-    size = 1,
+    size = 2,
     alpha = 1
   ) +
   geom_point(
     aes(x = critic_name, y = max_year),
     color = chart_colors$max,
-    size = 1,
+    size = 2,
     alpha = 1
   ) +
   geom_label(
@@ -131,8 +132,27 @@ ggplot(df) +
     axis.text = element_text(color = chart_colors$main),
     panel.grid.major = element_line(color = chart_colors$light_grey),
     panel.grid.minor = element_line(color = chart_colors$light_grey),
-    plot.margin = margin(0, 0, 0, 0)
-  )
+    plot.margin = margin(11.5, 11.5, 11.5, 11.5),
+    plot.title = element_markdown(
+      size = 18 * 2,
+      face = "bold",
+      margin = margin(b = 10),
+      color = chart_colors$main,
+      family = "Roboto Condensed"
+    ),
+    plot.subtitle = element_markdown(
+      size = 13 * 2,
+      margin = margin(b = 15),
+      family = "Roboto Condensed Light",
+      face = "plain",
+      color = chart_colors$main
+    ),
+    plot.caption = element_text(color = paste0(chart_colors$main, "4D"), family = "Roboto Condensed"),
+    plot.title.position = "plot"
+  ) +
+  labs(title = "teste1",
+       subtitle = "teste",
+       caption = "Source: BBC Music/Datawrapper | Chart: João Palmeiro <Twitter: @joaompalmeiro>")
 
 # A3 (vertical)
 ggsave(
