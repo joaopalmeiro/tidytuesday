@@ -3,9 +3,10 @@ library(ggtext)
 library(here)
 library(hrbrthemes)
 
-PATH <- here("2020-08-11")
+source(here("utils", "theme.R"))
 
-tick <- "\u2502"
+PATH <- here("2020-08-11")
+TICK <- "\u2502"
 
 avatar <-
   readr::read_csv(
@@ -50,6 +51,12 @@ episodes <- avatar %>%
   select(all_of(episode_cols)) %>%
   distinct()
 head(episodes)
+head(avatar_imdb)
+
+episodes %>%
+  left_join(avatar_imdb, by = c("book_num" = "season", "chapter_num" = "episode")) %>%
+  rename(tidy_tuesday = imdb_rating, imdb = rating) %>%
+  select(book_num, chapter_num, tidy_tuesday, imdb) %>% filter(tidy_tuesday != imdb | is.na(tidy_tuesday))
 
 episodes %>%
   group_by(book_num) %>%
@@ -62,15 +69,20 @@ episodes %>%
   filter(is.na(imdb_rating))
 
 group <- episodes %>%
-  group_by(book) %>%
+  group_by(book_num) %>%
   summarise(imdb_rating = mean(imdb_rating, na.rm = TRUE))
 
-group
+group_imdb <- avatar_imdb %>%
+  group_by(season) %>%
+  summarise(rating = mean(rating))
 
-episodes %>% ggplot(aes(x = imdb_rating, y = book)) +
+group
+group_imdb
+
+avatar_imdb %>% ggplot(aes(x = rating, y = season)) +
   geom_point(
-    shape = tick,
+    shape = TICK,
     size = 2,
     alpha = .4
   ) +
-  geom_point(data = group, size = 4, shape = tick)
+  geom_point(data = group_imdb, size = 4, shape = TICK) + base_theme()
