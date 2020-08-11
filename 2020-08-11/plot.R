@@ -3,6 +3,8 @@ library(ggtext)
 library(here)
 library(hrbrthemes)
 
+PATH <- here("2020-08-11")
+
 tick <- "\u2502"
 
 avatar <-
@@ -10,7 +12,20 @@ avatar <-
     "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-11/avatar.csv"
   )
 
+avatar_imdb <-
+  readr::read_csv(
+    paste0(PATH, "/imdb-20200811_1321.csv"),
+    col_types = cols(
+      season = col_integer(),
+      episode = col_integer(),
+      title = col_character(),
+      total_votes = col_integer(),
+      rating = col_double()
+    )
+  ) %>% filter(!episode == 0)
+
 head(avatar)
+head(avatar_imdb)
 
 avatar %>%
   summarise_all(list(~ sum(is.na(.))))
