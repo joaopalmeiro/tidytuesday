@@ -12,7 +12,8 @@ base_theme <-
            axis_text_size = base_size,
            axis_color = COLORS$b,
            tick_color = COLORS$b,
-           axis_text_color = COLORS$b) {
+           axis_text_color = COLORS$b,
+           axis_title_color = COLORS$b) {
     half_base_size <- base_size / 2
 
     theme(
@@ -40,11 +41,24 @@ base_theme <-
         margin = margin(l = 0.8 * half_base_size / 2),
         hjust = 0
       ),
-      
-      axis.title = element_text(size = axis_title_size),
+
+      axis.title = element_text(size = axis_title_size, color = axis_title_color),
       axis.title.x = element_text(
         margin = margin(t = half_base_size / 2),
-        vjust = 1
+        vjust = 1, hjust = 1
+      ),
+      axis.title.x.top = element_text(
+        margin = margin(b = half_base_size / 2),
+        vjust = 0, hjust = 1
+      ),
+      axis.title.y = element_text(
+        margin = margin(r = half_base_size / 2),
+        vjust = 1, hjust = 1
+      ),
+      axis.title.y.right = element_text(
+        angle = -90,
+        margin = margin(l = half_base_size / 2),
+        vjust = 1, hjust = 0
       )
     )
   }

@@ -56,7 +56,8 @@ head(avatar_imdb)
 episodes %>%
   left_join(avatar_imdb, by = c("book_num" = "season", "chapter_num" = "episode")) %>%
   rename(tidy_tuesday = imdb_rating, imdb = rating) %>%
-  select(book_num, chapter_num, tidy_tuesday, imdb) %>% filter(tidy_tuesday != imdb | is.na(tidy_tuesday))
+  select(book_num, chapter_num, tidy_tuesday, imdb) %>%
+  filter(tidy_tuesday != imdb | is.na(tidy_tuesday))
 
 episodes %>%
   group_by(book_num) %>%
@@ -85,4 +86,5 @@ avatar_imdb %>% ggplot(aes(x = rating, y = season)) +
     size = 2,
     alpha = .4
   ) +
-  geom_point(data = group_imdb, size = 4, shape = TICK) + base_theme()
+  geom_point(data = group_imdb, size = 4, shape = TICK) +
+  base_theme()
